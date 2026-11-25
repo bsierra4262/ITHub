@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { useUsuarios, useUsuarioMutations, type UsuariosFilters } from '@/hooks/useUsuarios';
 import { useAuthStore } from '@/stores/auth';
+import { useMetodosIngreso } from '@/hooks/useMetodosIngreso';
 import { rolLabel, ROLES } from '@/lib/usuario-schema';
 import { dateTime } from '@/lib/format';
 import type { Usuario } from '@/types/usuario';
@@ -23,6 +24,7 @@ export default function UsuariosPage() {
   const { data, meta, loading, error, reload } = useUsuarios(filters);
   const yo = useAuthStore((s) => s.user);
   const esAdmin = yo?.rol === 'admin';
+  const { metodos } = useMetodosIngreso();
 
   const [modal, setModal] = useState<null | { kind: 'desactivar'; user: Usuario }>(null);
 
@@ -42,6 +44,13 @@ export default function UsuariosPage() {
 
   return (
     <AppShell title="Usuarios">
+      {metodos?.ithub && (
+        <div className="mb-4 rounded-lg border border-primary-100 bg-primary-50 p-4 text-sm text-neutral-700">
+          El ingreso es con <strong>ITHub</strong>: quién entra a Facturación y con qué rol se
+          administra en ITHub. El rol que figura acá se actualiza con el de ITHub cada vez que la
+          persona ingresa, y quien tiene permiso en ITHub se da de alta solo en su primer ingreso.
+        </div>
+      )}
       <div className="mb-4 flex justify-end">
         <Link href="/usuarios/nuevo">
           <Button>
