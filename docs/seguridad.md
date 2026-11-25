@@ -73,6 +73,17 @@ Este documento describe las medidas de seguridad aplicadas en ITHub y cómo se m
 - Sin `GOOGLE_OAUTH_CLIENT_ID` el endpoint responde `GOOGLE_LOGIN_DISABLED` y **nadie puede entrar** (no hay camino alternativo)
 - Detalle en `docs/google-login-setup.md`
 
+### 2.6c Ingreso con ITHub (sesión única, si está configurado)
+- Con `ITHUB_CLIENT_ID` + `ITHUB_CLIENT_SECRET` el ingreso es por ITHub (OpenID Connect, código + PKCE S256) y `POST /auth/google` queda apagado. Sin esas variables, todo sigue como en 2.6b
+- Todo el flujo es server-side en la API: el canje del código (con el secreto, que vive solo en `api/.env` del servidor) y la validación del id_token. El frontend no ve tokens de ITHub
+- id_token y logout_token: RS256 con la clave del `kid` de `/oauth/jwks` (caché 1 h, se vuelve a bajar si el kid no está), `iss`, `aud` = `facturacion`, `exp` (60 s de tolerancia) y `nonce`; el logout_token exige el evento de back-channel logout y que no traiga nonce. Algoritmos distintos de RS256 se rechazan (sin confusión HS256/none)
+- `state`, `nonce` y verificador PKCE viajan en la cookie `ithub_oidc` (HttpOnly, Secure, `SameSite=Lax` porque la vuelta puede venir de Google vía ITHub, firmada con HMAC derivado de `JWT_SECRET`, 10 min, de un solo uso, `Path=/api/v1/auth/ithub`)
+- `next` solo acepta rutas internas (sin esquema, host, `//` ni barra invertida): no hay open redirect
+- ITHub decide el acceso y el rol (claim `rol`, uno de los 4 de la app). El usuario se crea en el primer ingreso; si existía, se le aplica el rol y se reactiva; todo queda en auditoría (`origen: ithub`)
+- Back-channel logout: `POST /auth/ithub/logout` revoca los refresh de las sesiones con ese `sid` y las marca cerradas en `ithub_sesiones`; el access token lleva el `sid` y `JwtAuthMiddleware` lo rechaza en el pedido siguiente. Es la única ruta que acepta form-urlencoded (`JsonBodyMiddleware`): no usa cookies, la autentica la firma
+- Con ITHub activo, las sesiones abiertas antes por Google no se renuevan (`ITHUB_REQUERIDO`): ITHub no podría cerrarlas
+- Detalle en `docs/ithub-login-setup.md`
+
 ### 2.7 2FA TOTP (Fase 3)
 - Tabla `users_2fa` opcional (no incluida en MVP)
 - Algoritmo TOTP RFC 6238, 6 dígitos, ventana ±1
@@ -176,6 +187,7 @@ Implementado con `RateLimitMiddleware` (cache en `storage/ratelimit/` con tokens
 |---|---|---|
 | `POST /auth/google` | IP | 20 / 15 min |
 | `POST /auth/refresh` | IP | 20 / min |
+| `GET /auth/ithub/login` y `/callback` | IP | 120 / min (perfil general: una oficina comparte IP) |
 | `POST /facturas/import/*` | user_id | 10 / h |
 | Resto autenticado | user_id | 120 / min |
 

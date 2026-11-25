@@ -145,6 +145,26 @@ return [
         'hosted_domain' => env_get('GOOGLE_OAUTH_HOSTED_DOMAIN', 'intellihelp.tech'),
     ],
 
+    // Ingreso con ITHub (sesión única de Intellihelp, OpenID Connect). Con
+    // client_id y client_secret el ingreso pasa por ITHub y /auth/google queda
+    // apagado; sin ellos sigue el login con Google de siempre. El secreto vive
+    // solo en api/.env del servidor (ver docs/ithub-login-setup.md).
+    'ithub' => [
+        'issuer' => rtrim((string) env_get('ITHUB_ISSUER', 'https://ithub.intellihelp.tech'), '/'),
+        'client_id' => env_get('ITHUB_CLIENT_ID', ''),
+        'client_secret' => env_get('ITHUB_CLIENT_SECRET', ''),
+        // Callback de la API registrado en ITHub (coincidencia exacta)
+        'redirect_uri' => env_get(
+            'ITHUB_REDIRECT_URI',
+            rtrim(env_required('APP_URL'), '/') . '/api/v1/auth/ithub/callback'
+        ),
+        // Adónde vuelve ITHub después de cerrar la sesión (registrada en ITHub)
+        'post_logout_uri' => env_get(
+            'ITHUB_POST_LOGOUT_URI',
+            rtrim(env_required('FRONTEND_URL'), '/') . '/login/'
+        ),
+    ],
+
     'smtp' => [
         'host' => env_get('SMTP_HOST', ''),
         'port' => env_get('SMTP_PORT', 587, 'int'),
