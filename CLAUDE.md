@@ -38,6 +38,7 @@
 - Refresh en cookie HttpOnly + SameSite=Strict, scoped a `/api/v1/auth`
 - CORS con whitelist estricta, headers Strict-Transport-Security + CSP + COOP
 - **Login solo con Google Workspace (@intellihelp.tech).** Sin login con password, sin cambio ni reset de password. Usuarios dados de alta en /usuarios solo con email del dominio. Ver `docs/google-login-setup.md`
+- **Ingreso con ITHub (sesión única) si está configurado** (`ITHUB_CLIENT_ID` + `ITHUB_CLIENT_SECRET` en `api/.env`): OIDC código + PKCE, canje y validación del id_token en la API, rol del claim `rol`, back-channel logout. Con ITHub, `/auth/google` queda apagado. Nunca vuelve el login con password. Ver `docs/ithub-login-setup.md`
 - Rate limit: /auth/google 20/15min IP, general 120/min
 - Mass assignment whitelist con `$fillable` en todos los modelos
 - Auditoría de toda acción sensible (con IP + request_id + diff before/after)

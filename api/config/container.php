@@ -19,6 +19,7 @@ use ITHub\Api\Services\DashboardService;
 use ITHub\Api\Services\FacturaImportService;
 use ITHub\Api\Services\GoogleIdTokenVerifier;
 use ITHub\Api\Services\FacturaService;
+use ITHub\Api\Services\ItHubOidcClient;
 use ITHub\Api\Services\JwtService;
 use ITHub\Api\Services\ServicioAjusteService;
 use ITHub\Api\Services\ServicioCuotaService;
@@ -124,6 +125,11 @@ return [
 
     GoogleIdTokenVerifier::class => fn (ContainerInterface $c) => new GoogleIdTokenVerifier(
         (string) ($c->get('settings')['google_login']['client_id'] ?? '')
+    ),
+
+    ItHubOidcClient::class => fn (ContainerInterface $c) => new ItHubOidcClient(
+        (array) ($c->get('settings')['ithub'] ?? []),
+        $c->get('basePath') . '/' . $c->get('settings')['storage']['cache']
     ),
 
     AuthService::class => function (ContainerInterface $c): AuthService {

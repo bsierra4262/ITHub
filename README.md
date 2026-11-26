@@ -22,7 +22,8 @@ Deploy productivo en Hostinger:
 | [`docs/seguridad.md`](docs/seguridad.md) | Arquitectura de seguridad, OWASP, hardening |
 | [`docs/runbook-deploy-manual.md`](docs/runbook-deploy-manual.md) | **Deploy a Hostinger** (comandos paso a paso, manual) |
 | [`docs/google-drive-setup.md`](docs/google-drive-setup.md) | Configuración del Service Account de Google Drive |
-| [`docs/google-login-setup.md`](docs/google-login-setup.md) | Login con Google Workspace (opcional, restringido al dominio) |
+| [`docs/ithub-login-setup.md`](docs/ithub-login-setup.md) | Ingreso con ITHub (sesión única de Intellihelp, OpenID Connect) |
+| [`docs/google-login-setup.md`](docs/google-login-setup.md) | Login con Google Workspace (cuando ITHub no está configurado) |
 | [`docs/endpoints.md`](docs/endpoints.md) | Referencia de endpoints del API |
 | [`docs/schema.md`](docs/schema.md) | Modelo de datos |
 | [`docs/estructura.md`](docs/estructura.md) | Estructura del monorepo |
@@ -91,8 +92,10 @@ Accesos por defecto:
 - MySQL: `localhost:3306` (user: `ithub`, pass: ver `.env`)
 - Adminer (gestor DB): <http://localhost:8081>
 
-Acceso: el **único login es con Google Workspace** (`@intellihelp.tech`). No
-hay login con password. El seed crea el admin con `SEED_ADMIN_EMAIL` (tiene que
+Acceso: con **ITHub** configurado (`ITHUB_CLIENT_ID` + `ITHUB_CLIENT_SECRET`
+en `api/.env`) el ingreso es por la sesión única de Intellihelp: ITHub decide
+quién entra y con qué rol (ver `docs/ithub-login-setup.md`). Sin ITHub, el
+login es con Google Workspace (`@intellihelp.tech`). No hay login con password. El seed crea el admin con `SEED_ADMIN_EMAIL` (tiene que
 ser una cuenta del dominio) y el resto de los usuarios se dan de alta en
 `/usuarios` con su email de Workspace. Configuración del client id y pruebas en
 `docs/google-login-setup.md`. Para desarrollo local hace falta un client id con

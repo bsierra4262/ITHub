@@ -51,7 +51,20 @@ final class Routes
         // AUTH (rutas públicas con rate limit estricto)
         // ============================================================
         $app->group('/auth', function (RouteCollectorProxy $g): void {
-            // Unico login: Google Workspace. Rate limit por IP (no hay email en el body)
+            // Con qué se ingresa (lo consulta la pantalla de ingreso)
+            $g->get('/metodos', [AuthController::class, 'metodos']);
+
+            // Ingreso con ITHub (sesión única). login/callback son navegaciones
+            // del navegador; el aviso de cierre lo manda ITHub por detrás.
+            // (perfil general por IP: el de login permite muy pocos y una oficina
+            // comparte IP; cada ingreso pasa dos veces por acá)
+            $g->get('/ithub/login', [AuthController::class, 'ithubLogin'])
+                ->add(new RateLimitMiddleware('general'));
+            $g->get('/ithub/callback', [AuthController::class, 'ithubCallback'])
+                ->add(new RateLimitMiddleware('general'));
+            $g->post('/ithub/logout', [AuthController::class, 'ithubAvisoCierre']);
+
+            // Login con Google Workspace (solo sin ITHub). Rate limit por IP (no hay email en el body)
             $g->post('/google', [AuthController::class, 'google'])
                 ->add(new RateLimitMiddleware('login'));
             $g->post('/refresh', [AuthController::class, 'refresh'])

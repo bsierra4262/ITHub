@@ -30,14 +30,25 @@ export function useAuth() {
     [setSession],
   );
 
+  /**
+   * Cierra la sesión. Con ITHub la API devuelve `logout_url`: se sigue a
+   * ITHub, que cierra la sesión única en todas las apps y vuelve al ingreso.
+   */
   const logout = useCallback(async () => {
+    let salidaItHub: string | null = null;
     try {
-      await api.post('/auth/logout');
+      const resp = await api.post<ApiSuccess<{ logout_url?: string }> | ''>('/auth/logout');
+      const data = resp.data ? resp.data.data : undefined;
+      salidaItHub = data?.logout_url ?? null;
     } catch {
       // ignoramos: igual limpiamos local
     } finally {
       clear();
-      router.push('/login');
+      if (salidaItHub) {
+        window.location.assign(salidaItHub);
+      } else {
+        router.push('/login');
+      }
     }
   }, [clear, router]);
 
